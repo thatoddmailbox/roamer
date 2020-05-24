@@ -3,18 +3,21 @@ package roamer
 import (
 	"io/ioutil"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
+
+var reMigrationDescription = regexp.MustCompile("-- Description: (.*)\r*\n")
 
 // A Migration represents a distinct operation performed on a database.
 type Migration struct {
 	ID          string
 	Description string
 
-	downFile string
-	upFile   string
+	downPath string
+	upPath   string
 }
 
 func (e *Environment) CreateMigration(description string) error {

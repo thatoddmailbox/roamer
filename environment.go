@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"sort"
@@ -158,12 +159,30 @@ func NewEnvironment(basePath string) (*Environment, error) {
 
 		parts := strings.Split(baseName, "_")
 
+		downPath := fullPath + "_down.sql"
+		upPath := fullPath + "_up.sql"
+
+		// read the description from the down migration
+		downFile, err := ioutil.ReadFile(downPath)
+		if err != nil {
+			return nil, err
+		}
+		matches := reMigrationDescription.FindAllSubmatch(downFile, -1)
+		if len(matches) == 0 {
+			return nil, fmt.Errorf("roamer: migration file '%s' is missing a description line", downPath)
+		}
+		if len(matches) > 1 {
+			return nil, fmt.Errorf("roamer: migration file '%s' has too many description lines", downPath)
+		}
+
+		description := string(matches[0][1])
+
 		env.migrations = append(env.migrations, Migration{
 			ID:          parts[0],
-			Description: "desc",
+			Description: description,
 
-			downFile: fullPath + "_down.sql",
-			upFile:   fullPath + "_up.sql",
+			downPath: downPath,
+			upPath:   upPath,
 		})
 	}
 
