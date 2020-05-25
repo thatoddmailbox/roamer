@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/thatoddmailbox/roamer"
 )
 
@@ -61,4 +64,18 @@ func registerCommands() {
 		Arguments:   []string{},
 		Action:      commandUpgrade,
 	})
+}
+
+func requireClean(environment *roamer.Environment) {
+	isClean, err := environment.VerifyClean()
+	if err != nil {
+		panic(err)
+	}
+
+	if !isClean {
+		fmt.Println("One or more migrations are marked as dirty.")
+		fmt.Println("It is not safe to apply additional migrations at this time.")
+		fmt.Println("For more information, and help resolving the issue, do `roamer status`.")
+		os.Exit(1)
+	}
 }

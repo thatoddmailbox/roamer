@@ -8,6 +8,8 @@ import (
 )
 
 func commandUpgrade(environment *roamer.Environment, args []string) {
+	requireClean(environment)
+
 	allMigrations, err := environment.ListAllMigrations()
 	if err != nil {
 		panic(err)

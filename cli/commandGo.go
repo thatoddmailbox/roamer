@@ -9,6 +9,8 @@ import (
 )
 
 func commandGo(environment *roamer.Environment, args []string) {
+	requireClean(environment)
+
 	allMigrations, err := environment.ListAllMigrations()
 	if err != nil {
 		panic(err)
@@ -111,7 +113,9 @@ func commandGo(environment *roamer.Environment, args []string) {
 		if err != nil {
 			// the migration failed!
 			fmt.Printf("There was an error applying migration %s!\n", migrationToApply.ID)
+			fmt.Println()
 			fmt.Println(err)
+			fmt.Println()
 			fmt.Println("The database may now be in an inconsistent state. The migration has been marked as dirty.")
 			fmt.Println("You must connect to the database and manually resolve the issue.")
 			fmt.Println("Then, update the " + environment.GetHistoryTableName() + " table and, depending on how you resolved the issue, either delete the migration or set the dirty flag to 0.")

@@ -39,14 +39,22 @@ func commandStatus(environment *roamer.Environment, args []string) {
 
 	fmt.Println("ID" + idColumnPadding + columnSpacingStr + "Description")
 
+	haveDirty := false
+
 	i := 0
 	for _, appliedMigration := range appliedMigrations {
+		idDisplay := appliedMigration.ID + " "
+		if appliedMigration.Dirty {
+			haveDirty = true
+			idDisplay = "!" + appliedMigration.ID
+		}
+
 		migration, err := environment.GetMigrationByID(appliedMigration.ID)
 		if err == nil {
-			fmt.Println(appliedMigration.ID + " " + columnSpacingStr + migration.Description)
+			fmt.Println(idDisplay + columnSpacingStr + migration.Description)
 		} else {
 			if err == roamer.ErrMigrationNotFound {
-				fmt.Println(appliedMigration.ID + columnSpacingStr + "*** ERROR: missing corresponding migration file!")
+				fmt.Println(idDisplay + columnSpacingStr + "*** ERROR: missing corresponding migration file!")
 			} else {
 				panic(err)
 			}
@@ -64,4 +72,11 @@ func commandStatus(environment *roamer.Environment, args []string) {
 		fmt.Println("(* = migration has not been applied)")
 	}
 
+	if haveDirty {
+		fmt.Println()
+		fmt.Println("(! = migration is dirty)")
+		fmt.Println("One or more migrations are marked as dirty. The database may be in an inconsistent state.")
+		fmt.Println("You must connect to the database and manually resolve the issue.")
+		fmt.Println("Then, update the " + environment.GetHistoryTableName() + " table and, depending on how you resolved the issue, either delete the migration or set the dirty flag to 0.")
+	}
 }
