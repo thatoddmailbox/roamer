@@ -32,7 +32,8 @@ type Environment struct {
 	db     *sql.DB
 	driver driver
 
-	migrations []Migration
+	migrations     []Migration
+	migrationsByID map[string]Migration
 
 	basePath           string
 	fullMigrationsPath string
@@ -93,8 +94,26 @@ func NewEnvironment(basePath string) (*Environment, error) {
 		return nil, fmt.Errorf("roamer: did not recognize driver name '%s'", env.LocalConfig.Database.Driver)
 	}
 
+	dsn := env.LocalConfig.Database.DSN
+
+	if env.LocalConfig.Database.Driver == "mysql" {
+		config, err := mysql.ParseDSN(dsn)
+		if err != nil {
+			return nil, err
+		}
+
+		config.MultiStatements = true
+
+		env.driver = &driverMySQL{
+			db:     env.db,
+			config: config,
+		}
+
+		dsn = config.FormatDSN()
+	}
+
 	// try to connect to the database
-	env.db, err = sql.Open(env.LocalConfig.Database.Driver, env.LocalConfig.Database.DSN)
+	env.db, err = sql.Open(env.LocalConfig.Database.Driver, dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +126,7 @@ func NewEnvironment(basePath string) (*Environment, error) {
 
 	// set up the driver
 	if env.LocalConfig.Database.Driver == "mysql" {
-		config, err := mysql.ParseDSN(env.LocalConfig.Database.DSN)
+		config, err := mysql.ParseDSN(dsn)
 		if err != nil {
 			return nil, err
 		}
@@ -154,6 +173,7 @@ func NewEnvironment(basePath string) (*Environment, error) {
 	}
 
 	env.migrations = []Migration{}
+	env.migrationsByID = map[string]Migration{}
 	for _, baseName := range baseNames {
 		fullPath := path.Join(env.fullMigrationsPath, baseName)
 
@@ -184,6 +204,7 @@ func NewEnvironment(basePath string) (*Environment, error) {
 			downPath: downPath,
 			upPath:   upPath,
 		})
+		env.migrationsByID[parts[0]] = env.migrations[len(env.migrations)-1]
 	}
 
 	return &env, nil
