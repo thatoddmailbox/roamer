@@ -13,5 +13,5 @@ func commandCreate(environment *roamer.Environment, args []string) {
 		panic(err)
 	}
 
-	fmt.Println("A new migration file has been created.")
+	fmt.Println("A new migration has been created.")
 }

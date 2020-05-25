@@ -32,6 +32,12 @@ func registerCommands() {
 		Action:      commandCreate,
 	})
 	registerCommand(command{
+		Name:        "go",
+		Description: "Migrates the database to the given migration",
+		Arguments:   []string{"MIGRATION ID"},
+		Action:      commandGo,
+	})
+	registerCommand(command{
 		Name:        "init",
 		Description: "Sets up a new environment",
 		Arguments:   []string{},

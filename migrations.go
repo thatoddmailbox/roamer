@@ -64,13 +64,23 @@ func (e *Environment) ApplyMigration(tx *sql.Tx, migration Migration, up bool) e
 		return err
 	}
 
-	_, err = tx.Exec(
-		"INSERT INTO "+tableNameRoamerHistory+"(id, appliedAt) VALUES(?, ?)",
-		migration.ID,
-		time.Now().Unix(),
-	)
-	if err != nil {
-		return err
+	if up {
+		_, err = tx.Exec(
+			"INSERT INTO "+tableNameRoamerHistory+"(id, appliedAt) VALUES(?, ?)",
+			migration.ID,
+			time.Now().Unix(),
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = tx.Exec(
+			"DELETE FROM "+tableNameRoamerHistory+" WHERE id = ?",
+			migration.ID,
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -139,7 +149,7 @@ func (e *Environment) GetLastAppliedMigration() (*AppliedMigration, error) {
 	result := AppliedMigration{}
 
 	err := e.db.QueryRow(
-		"SELECT id, appliedAt FROM "+tableNameRoamerHistory+" ORDER BY appliedAt DESC LIMIT 1",
+		"SELECT id, appliedAt FROM "+tableNameRoamerHistory+" ORDER BY appliedAt DESC, id DESC LIMIT 1",
 	).Scan(&result.ID, &result.AppliedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
