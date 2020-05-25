@@ -9,7 +9,7 @@ import (
 )
 
 func commandGo(environment *roamer.Environment, args []string) {
-	requireClean(environment)
+	requireSafe(environment)
 
 	allMigrations, err := environment.ListAllMigrations()
 	if err != nil {

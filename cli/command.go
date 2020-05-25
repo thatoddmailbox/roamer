@@ -66,14 +66,38 @@ func registerCommands() {
 	})
 }
 
-func requireClean(environment *roamer.Environment) {
-	isClean, err := environment.VerifyClean()
+func requireSafe(environment *roamer.Environment) {
+	isClean, err := environment.VerifyNoDirty()
 	if err != nil {
 		panic(err)
 	}
 
 	if !isClean {
 		fmt.Println("One or more migrations are marked as dirty.")
+		fmt.Println("It is not safe to apply additional migrations at this time.")
+		fmt.Println("For more information, and help resolving the issue, do `roamer status`.")
+		os.Exit(1)
+	}
+
+	allExist, err := environment.VerifyExist()
+	if err != nil {
+		panic(err)
+	}
+
+	if !allExist {
+		fmt.Println("There are migrations in the database that do not exist on disk.")
+		fmt.Println("It is not safe to apply additional migrations at this time.")
+		fmt.Println("For more information, and help resolving the issue, do `roamer status`.")
+		os.Exit(1)
+	}
+
+	isInOrder, err := environment.VerifyOrder()
+	if err != nil {
+		panic(err)
+	}
+
+	if !isInOrder {
+		fmt.Println("The migrations on disk do not match the order of migrations applied to the database.")
 		fmt.Println("It is not safe to apply additional migrations at this time.")
 		fmt.Println("For more information, and help resolving the issue, do `roamer status`.")
 		os.Exit(1)

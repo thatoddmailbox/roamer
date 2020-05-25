@@ -26,7 +26,23 @@ func commandStatus(environment *roamer.Environment, args []string) {
 		return
 	}
 
+	orderMatches, err := environment.VerifyOrder()
+	if err != nil {
+		panic(err)
+	}
+	if !orderMatches {
+		fmt.Println("The migrations on disk do not match the order of migrations applied to the database.")
+		fmt.Println("The status command is currently unable to provide useful output in this scenario.")
+		fmt.Println("You should check the " + environment.GetHistoryTableName() + " table and compare it to the migrations on disk.")
+		os.Exit(1)
+	}
+
 	maxIDLen := 0
+	for _, migration := range appliedMigrations {
+		if len(migration.ID) > maxIDLen {
+			maxIDLen = len(migration.ID)
+		}
+	}
 	for _, migration := range allMigrations {
 		if len(migration.ID) > maxIDLen {
 			maxIDLen = len(migration.ID)
@@ -40,6 +56,7 @@ func commandStatus(environment *roamer.Environment, args []string) {
 	fmt.Println("ID" + idColumnPadding + columnSpacingStr + "Description")
 
 	haveDirty := false
+	haveMissing := false
 
 	i := 0
 	for _, appliedMigration := range appliedMigrations {
@@ -55,6 +72,7 @@ func commandStatus(environment *roamer.Environment, args []string) {
 		} else {
 			if err == roamer.ErrMigrationNotFound {
 				fmt.Println(idDisplay + columnSpacingStr + "*** ERROR: missing corresponding migration file!")
+				haveMissing = true
 			} else {
 				panic(err)
 			}
@@ -63,7 +81,12 @@ func commandStatus(environment *roamer.Environment, args []string) {
 		i += 1
 	}
 
-	for _, unappliedMigration := range allMigrations[i:] {
+	unappliedMigrations := allMigrations
+	if i < len(allMigrations) {
+		unappliedMigrations = allMigrations[i:]
+	}
+
+	for _, unappliedMigration := range unappliedMigrations {
 		fmt.Println("*" + unappliedMigration.ID + columnSpacingStr + unappliedMigration.Description)
 	}
 
@@ -78,5 +101,15 @@ func commandStatus(environment *roamer.Environment, args []string) {
 		fmt.Println("One or more migrations are marked as dirty. The database may be in an inconsistent state.")
 		fmt.Println("You must connect to the database and manually resolve the issue.")
 		fmt.Println("Then, update the " + environment.GetHistoryTableName() + " table and, depending on how you resolved the issue, either delete the migration or set the dirty flag to 0.")
+	}
+
+	if haveMissing {
+		fmt.Println()
+		fmt.Println("One or more applied migrations do not have a matching file on disk. Are you using the correct environment?")
+		fmt.Println("You should restore these files, or, if you know what you're doing, remove the migration entries from the " + environment.GetHistoryTableName() + " table.")
+	}
+
+	if haveDirty || haveMissing {
+		os.Exit(1)
 	}
 }

@@ -202,19 +202,3 @@ func (e *Environment) GetLastAppliedMigration() (*AppliedMigration, error) {
 func (e *Environment) BeginTransaction() (*sql.Tx, error) {
 	return e.db.Begin()
 }
-
-// VerifyClean checks if the environment is in a clean state, and so additional migrations are safe to apply.
-func (e *Environment) VerifyClean() (bool, error) {
-	appliedMigrations, err := e.ListAppliedMigrations()
-	if err != nil {
-		return false, err
-	}
-
-	for _, appliedMigration := range appliedMigrations {
-		if appliedMigration.Dirty {
-			return false, nil
-		}
-	}
-
-	return true, nil
-}
