@@ -39,6 +39,11 @@ type Environment struct {
 	fullMigrationsPath string
 }
 
+// GetHistoryTableName gets the name of the table roamer is using to track history.
+func (e *Environment) GetHistoryTableName() string {
+	return tableNameRoamerHistory
+}
+
 // NewEnvironment creates a new environment with the given path.
 func NewEnvironment(basePath string) (*Environment, error) {
 	// validate the path

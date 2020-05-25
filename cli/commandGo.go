@@ -98,11 +98,6 @@ func commandGo(environment *roamer.Environment, args []string) {
 	}
 	fmt.Printf("Going %s -> %s (%s)\n\n", fromString, toString, distanceString)
 
-	tx, err := environment.BeginTransaction()
-	if err != nil {
-		panic(err)
-	}
-
 	offset := 0
 	if directionIsUp {
 		offset = 1
@@ -112,16 +107,16 @@ func commandGo(environment *roamer.Environment, args []string) {
 		migrationToApply := allMigrations[i+offset]
 		fmt.Printf("Applying %s migration %s - %s\n", directionString, migrationToApply.ID, migrationToApply.Description)
 
-		err = environment.ApplyMigration(tx, migrationToApply, directionIsUp)
+		err = environment.ApplyMigration(migrationToApply, directionIsUp)
 		if err != nil {
-			tx.Rollback()
-			panic(err)
+			// the migration failed!
+			fmt.Printf("There was an error applying migration %s!\n", migrationToApply.ID)
+			fmt.Println(err)
+			fmt.Println("The database may now be in an inconsistent state. The migration has been marked as dirty.")
+			fmt.Println("You must connect to the database and manually resolve the issue.")
+			fmt.Println("Then, update the " + environment.GetHistoryTableName() + " table and, depending on how you resolved the issue, either delete the migration or set the dirty flag to 0.")
+			os.Exit(1)
 		}
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		panic(err)
 	}
 
 	fmt.Printf("\nThe database is now at migration %s.\n", targetMigrationID)

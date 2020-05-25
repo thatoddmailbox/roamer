@@ -29,10 +29,11 @@ type Migration struct {
 type AppliedMigration struct {
 	ID        string
 	AppliedAt int
+	Dirty     bool
 }
 
 // ApplyMigration applies the migration to the database.
-func (e *Environment) ApplyMigration(tx *sql.Tx, migration Migration, up bool) error {
+func (e *Environment) ApplyMigration(migration Migration, up bool) error {
 	hasHistoryTable, err := e.driver.TableExists(tableNameRoamerHistory)
 	if err != nil {
 		return err
@@ -40,10 +41,30 @@ func (e *Environment) ApplyMigration(tx *sql.Tx, migration Migration, up bool) e
 
 	if !hasHistoryTable {
 		// create the history table first
-		_, err := tx.Exec("CREATE TABLE " + tableNameRoamerHistory + `(
+		_, err := e.db.Exec("CREATE TABLE " + tableNameRoamerHistory + `(
 			id VARCHAR(20) PRIMARY KEY,
-			appliedAt INT(11)
+			appliedAt INT(11),
+			dirty TINYINT(1)
 			)`)
+		if err != nil {
+			return err
+		}
+	}
+
+	if up {
+		_, err = e.db.Exec(
+			"INSERT INTO "+tableNameRoamerHistory+"(id, appliedAt, dirty) VALUES(?, ?, 1)",
+			migration.ID,
+			time.Now().Unix(),
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = e.db.Exec(
+			"UPDATE "+tableNameRoamerHistory+" SET dirty = 1 WHERE id = ?",
+			migration.ID,
+		)
 		if err != nil {
 			return err
 		}
@@ -59,22 +80,21 @@ func (e *Environment) ApplyMigration(tx *sql.Tx, migration Migration, up bool) e
 		return err
 	}
 
-	_, err = tx.Exec(string(migrationData))
+	_, err = e.db.Exec(string(migrationData))
 	if err != nil {
 		return err
 	}
 
 	if up {
-		_, err = tx.Exec(
-			"INSERT INTO "+tableNameRoamerHistory+"(id, appliedAt) VALUES(?, ?)",
+		_, err = e.db.Exec(
+			"UPDATE "+tableNameRoamerHistory+" SET dirty = 0 WHERE id = ?",
 			migration.ID,
-			time.Now().Unix(),
 		)
 		if err != nil {
 			return err
 		}
 	} else {
-		_, err = tx.Exec(
+		_, err = e.db.Exec(
 			"DELETE FROM "+tableNameRoamerHistory+" WHERE id = ?",
 			migration.ID,
 		)
@@ -125,16 +145,24 @@ func (e *Environment) ListAllMigrations() ([]Migration, error) {
 
 // ListAppliedMigrations gets all of the migrations that have been applied to the database.
 func (e *Environment) ListAppliedMigrations() ([]AppliedMigration, error) {
+	tableExists, err := e.driver.TableExists(tableNameRoamerHistory)
+	if err != nil {
+		return nil, err
+	}
+	if !tableExists {
+		return []AppliedMigration{}, nil
+	}
+
 	result := []AppliedMigration{}
 
-	rows, err := e.db.Query("SELECT id, appliedAt FROM " + tableNameRoamerHistory + " ORDER BY id ASC")
+	rows, err := e.db.Query("SELECT id, appliedAt, dirty FROM " + tableNameRoamerHistory + " ORDER BY id ASC")
 	if err != nil {
 		return nil, err
 	}
 
 	for rows.Next() {
 		appliedMigration := AppliedMigration{}
-		err = rows.Scan(&appliedMigration.ID, &appliedMigration.AppliedAt)
+		err = rows.Scan(&appliedMigration.ID, &appliedMigration.AppliedAt, &appliedMigration.Dirty)
 		if err != nil {
 			return nil, err
 		}
@@ -146,11 +174,19 @@ func (e *Environment) ListAppliedMigrations() ([]AppliedMigration, error) {
 
 // GetLastAppliedMigration gets the last migration that has been applied to the database, returning nil if nothing has been applied.
 func (e *Environment) GetLastAppliedMigration() (*AppliedMigration, error) {
+	tableExists, err := e.driver.TableExists(tableNameRoamerHistory)
+	if err != nil {
+		return nil, err
+	}
+	if !tableExists {
+		return nil, nil
+	}
+
 	result := AppliedMigration{}
 
-	err := e.db.QueryRow(
-		"SELECT id, appliedAt FROM "+tableNameRoamerHistory+" ORDER BY appliedAt DESC, id DESC LIMIT 1",
-	).Scan(&result.ID, &result.AppliedAt)
+	err = e.db.QueryRow(
+		"SELECT id, appliedAt, dirty FROM "+tableNameRoamerHistory+" ORDER BY appliedAt DESC, id DESC LIMIT 1",
+	).Scan(&result.ID, &result.AppliedAt, &result.Dirty)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
