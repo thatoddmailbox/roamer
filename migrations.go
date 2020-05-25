@@ -21,6 +21,8 @@ type Migration struct {
 	ID          string
 	Description string
 
+	Index int
+
 	downPath string
 	upPath   string
 }

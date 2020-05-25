@@ -21,30 +21,26 @@ func commandGo(environment *roamer.Environment, args []string) {
 		panic(err)
 	}
 
-	targetMigrationID := args[0]
-
-	if targetMigrationID != "none" {
-		_, err = environment.GetMigrationByID(targetMigrationID)
-		if err != nil {
-			if err == roamer.ErrMigrationNotFound {
-				fmt.Printf("Migration %s does not exist.\n", targetMigrationID)
-				os.Exit(1)
-				return
-			} else {
-				panic(err)
-			}
+	targetMigration, err := environment.ResolveIDOrOffset(args[0])
+	if err != nil {
+		if err == roamer.ErrMigrationNotFound {
+			fmt.Printf("Migration %s does not exist.\n", args[0])
+			os.Exit(1)
+			return
+		} else {
+			panic(err)
 		}
 	}
 
-	if lastMigration != nil && targetMigrationID != "none" {
-		if lastMigration.ID == targetMigrationID {
-			fmt.Printf("The database is already at migration %s.\n", targetMigrationID)
+	if lastMigration != nil && targetMigration != nil {
+		if lastMigration.ID == targetMigration.ID {
+			fmt.Printf("The database is already at migration %s.\n", targetMigration.ID)
 			os.Exit(1)
 			return
 		}
 	}
 
-	if lastMigration == nil && targetMigrationID == "none" {
+	if lastMigration == nil && targetMigration == nil {
 		fmt.Println("The database is already at no migrations.")
 		os.Exit(1)
 		return
@@ -58,12 +54,12 @@ func commandGo(environment *roamer.Environment, args []string) {
 			lastAppliedMigrationIndex = i
 		}
 
-		if targetMigrationID != "none" && migration.ID == targetMigrationID {
+		if targetMigration != nil && migration.ID == targetMigration.ID {
 			targetMigrationIndex = i
 		}
 	}
 
-	if targetMigrationID == "none" {
+	if targetMigration == nil {
 		targetMigrationIndex = -1
 	}
 
@@ -95,8 +91,8 @@ func commandGo(environment *roamer.Environment, args []string) {
 		fromString = lastMigration.ID
 	}
 	toString := "[nothing]"
-	if targetMigrationID != "none" {
-		toString = targetMigrationID
+	if targetMigration != nil {
+		toString = targetMigration.ID
 	}
 	fmt.Printf("Going %s -> %s (%s)\n\n", fromString, toString, distanceString)
 
@@ -123,5 +119,5 @@ func commandGo(environment *roamer.Environment, args []string) {
 		}
 	}
 
-	fmt.Printf("\nThe database is now at migration %s.\n", targetMigrationID)
+	fmt.Printf("\nThe database is now at migration %s.\n", toString)
 }

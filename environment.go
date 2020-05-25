@@ -185,7 +185,7 @@ func NewEnvironment(basePath string) (*Environment, error) {
 
 	env.migrations = []Migration{}
 	env.migrationsByID = map[string]Migration{}
-	for _, baseName := range baseNames {
+	for i, baseName := range baseNames {
 		fullPath := path.Join(env.fullMigrationsPath, baseName)
 
 		parts := strings.Split(baseName, "_")
@@ -217,6 +217,8 @@ func NewEnvironment(basePath string) (*Environment, error) {
 		env.migrations = append(env.migrations, Migration{
 			ID:          id,
 			Description: description,
+
+			Index: i,
 
 			downPath: downPath,
 			upPath:   upPath,

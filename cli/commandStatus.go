@@ -82,7 +82,7 @@ func commandStatus(environment *roamer.Environment, args []string) {
 	}
 
 	unappliedMigrations := allMigrations
-	if i < len(allMigrations) {
+	if i <= len(allMigrations) {
 		unappliedMigrations = allMigrations[i:]
 	}
 
