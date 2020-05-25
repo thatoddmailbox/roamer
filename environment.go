@@ -73,9 +73,12 @@ func NewEnvironment(basePath string) (*Environment, error) {
 
 		return nil, err
 	}
-	_, err = toml.DecodeReader(configFile, &env.Config)
+	metadata, err := toml.DecodeReader(configFile, &env.Config)
 	if err != nil {
 		return nil, err
+	}
+	if len(metadata.Undecoded()) != 0 {
+		return nil, UndecodedConfigError{"roamer.toml", metadata.Undecoded()}
 	}
 
 	// get the local config path and read it
@@ -88,9 +91,12 @@ func NewEnvironment(basePath string) (*Environment, error) {
 
 		return nil, err
 	}
-	_, err = toml.DecodeReader(configLocalFile, &env.LocalConfig)
+	metadata, err = toml.DecodeReader(configLocalFile, &env.LocalConfig)
 	if err != nil {
 		return nil, err
+	}
+	if len(metadata.Undecoded()) != 0 {
+		return nil, UndecodedConfigError{"roamer.local.toml", metadata.Undecoded()}
 	}
 
 	env.fullMigrationsPath = path.Join(basePath, env.Config.MigrationDirectory)
@@ -183,6 +189,12 @@ func NewEnvironment(basePath string) (*Environment, error) {
 		fullPath := path.Join(env.fullMigrationsPath, baseName)
 
 		parts := strings.Split(baseName, "_")
+		id := parts[0]
+
+		_, existsAlready := env.migrationsByID[id]
+		if existsAlready {
+			return nil, fmt.Errorf("roamer: there are two migrations with ID %s", id)
+		}
 
 		downPath := fullPath + "_down.sql"
 		upPath := fullPath + "_up.sql"
@@ -203,13 +215,13 @@ func NewEnvironment(basePath string) (*Environment, error) {
 		description := string(matches[0][1])
 
 		env.migrations = append(env.migrations, Migration{
-			ID:          parts[0],
+			ID:          id,
 			Description: description,
 
 			downPath: downPath,
 			upPath:   upPath,
 		})
-		env.migrationsByID[parts[0]] = env.migrations[len(env.migrations)-1]
+		env.migrationsByID[id] = env.migrations[len(env.migrations)-1]
 	}
 
 	return &env, nil
