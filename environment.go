@@ -18,8 +18,8 @@ import (
 // ErrEnvironmentMissingConfig is returned when the environment is missing a roamer.toml file.
 var ErrEnvironmentMissingConfig = errors.New("roamer: environment is missing roamer.toml file")
 
-// ErrEnvironmentMissingLocalConfig is returned when the environment is missing a roamer.local.toml file.
-var ErrEnvironmentMissingLocalConfig = errors.New("roamer: environment is missing roamer.local.toml file")
+// ErrEnvironmentMissingLocalConfig is returned when the environment is missing a local config file.
+var ErrEnvironmentMissingLocalConfig = errors.New("roamer: environment is missing local config file")
 
 // ErrEnvironmentWasFile is returned when you provide a file as your environment path.
 var ErrEnvironmentWasFile = errors.New("roamer: environment path is a file, not a folder! make sure you provide the *path* to your roamer.toml, not the actual file.")
