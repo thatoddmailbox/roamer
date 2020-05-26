@@ -59,61 +59,33 @@ func (e *Environment) readFile(filename string) ([]byte, error) {
 	return migrationData, nil
 }
 
-// NewEnvironment creates a new environment, reading from the given config and http.FileSystem.
-func NewEnvironment(config Config, localConfig LocalConfig, fs http.FileSystem) (*Environment, error) {
+// NewEnvironment creates a new environment, reading from the given config and http.FileSystem and using the given *sql.DB.
+func NewEnvironment(config Config, localConfig LocalConfig, db *sql.DB, fs http.FileSystem) (*Environment, error) {
 	env := Environment{
 		Config:      config,
 		LocalConfig: localConfig,
+
+		db: db,
 
 		fs: fs,
 	}
 
 	var err error
 
-	if env.LocalConfig.Database.Driver != "mysql" {
-		return nil, fmt.Errorf("roamer: did not recognize driver name '%s'", env.LocalConfig.Database.Driver)
+	if env.LocalConfig.Database.Driver != DriverTypeMySQL {
+		return nil, fmt.Errorf("roamer: did not recognize driver type '%s'", env.LocalConfig.Database.Driver)
 	}
 
-	dsn := env.LocalConfig.Database.DSN
-
-	if env.LocalConfig.Database.Driver == "mysql" {
-		config, err := mysql.ParseDSN(dsn)
-		if err != nil {
-			return nil, err
-		}
-
-		config.MultiStatements = true
-
-		env.driver = &driverMySQL{
-			db:     env.db,
-			config: config,
-		}
-
-		dsn = config.FormatDSN()
-	}
-
-	// try to connect to the database
-	env.db, err = sql.Open(env.LocalConfig.Database.Driver, dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	// test that it worked
+	// test that the db works
 	err = env.db.Ping()
 	if err != nil {
 		return nil, err
 	}
 
 	// set up the driver
-	if env.LocalConfig.Database.Driver == "mysql" {
-		config, err := mysql.ParseDSN(dsn)
-		if err != nil {
-			return nil, err
-		}
-
+	if env.LocalConfig.Database.Driver == DriverTypeMySQL {
 		env.driver = &driverMySQL{
-			db:     env.db,
-			config: config,
+			db: env.db,
 		}
 	}
 
@@ -257,7 +229,27 @@ func NewEnvironmentFromDisk(basePath string) (*Environment, error) {
 
 	fullMigrationsPath := path.Join(basePath, config.Environment.MigrationDirectory)
 
-	env, err := NewEnvironment(config, localConfig, http.Dir(fullMigrationsPath))
+	// connect to the db
+	dsn := localConfig.Database.DSN
+
+	if localConfig.Database.Driver == DriverTypeMySQL {
+		config, err := mysql.ParseDSN(dsn)
+		if err != nil {
+			return nil, err
+		}
+
+		config.MultiStatements = true
+
+		dsn = config.FormatDSN()
+	}
+
+	// try to connect to the database
+	db, err := sql.Open(string(localConfig.Database.Driver), dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	env, err := NewEnvironment(config, localConfig, db, http.Dir(fullMigrationsPath))
 	if err != nil {
 		return nil, err
 	}

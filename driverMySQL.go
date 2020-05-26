@@ -3,19 +3,15 @@ package roamer
 import (
 	"database/sql"
 	"errors"
-
-	"github.com/go-sql-driver/mysql"
 )
 
 type driverMySQL struct {
-	db     *sql.DB
-	config *mysql.Config
+	db *sql.DB
 }
 
 func (d *driverMySQL) TableExists(name string) (bool, error) {
 	rows, err := d.db.Query(
-		"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ?",
-		d.config.DBName,
+		"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?",
 		name,
 	)
 	defer rows.Close()

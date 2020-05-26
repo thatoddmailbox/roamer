@@ -13,7 +13,7 @@ type Config struct {
 
 // A LocalDatabaseConfig struct defines configuration parameters for the database connection.
 type LocalDatabaseConfig struct {
-	Driver string
+	Driver DriverType
 	DSN    string
 }
 
@@ -33,7 +33,7 @@ var DefaultConfig = Config{
 // DefaultLocalConfig contains the default configuration options, used when creating a new environment.
 var DefaultLocalConfig = LocalConfig{
 	Database: LocalDatabaseConfig{
-		Driver: "mysql",
+		Driver: DriverTypeMySQL,
 		DSN:    "user:password@tcp(localhost:3306)/dbname",
 	},
 }
