@@ -29,6 +29,7 @@ func main() {
 	flagEnvironment := flag.String("env", "./", "The directory to use as an environment.")
 	flagForce := flag.Bool("force", false, "Skip any prompts for down migrations. Useful for shell scripts that run migrate.")
 	flagLocalConfig := flag.String("local-config", "local", "The file to use as the local config.")
+	flagStamp := flag.Bool("stamp", false, "Only update the history table with the migrations, without actually running the migration scripts.")
 	flag.Parse()
 
 	registerCommands()
@@ -91,5 +92,5 @@ func main() {
 		args = []string{command.Name, *flagEnvironment}
 	}
 
-	command.Action(environment, commandOptions{*flagForce}, args[1:])
+	command.Action(environment, commandOptions{*flagForce, *flagStamp}, args[1:])
 }

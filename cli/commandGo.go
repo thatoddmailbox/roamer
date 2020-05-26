@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/AlecAivazis/survey"
 
@@ -61,6 +62,8 @@ func commandGo(environment *roamer.Environment, options commandOptions, args []s
 		panic(err)
 	}
 
+	operation.Stamp = options.stamp
+
 	fromString := "[nothing]"
 	if lastMigration != nil {
 		fromString = lastMigration.ID
@@ -69,10 +72,14 @@ func commandGo(environment *roamer.Environment, options commandOptions, args []s
 	if targetMigration != nil {
 		toString = targetMigration.ID
 	}
-	fmt.Printf("Going %s -> %s (%s)\n\n", fromString, toString, operation.DistanceString())
+	details := ""
+	if options.stamp {
+		details = " (stamping only)"
+	}
+	fmt.Printf("Going %s -> %s (%s)%s\n\n", fromString, toString, operation.DistanceString(), details)
 
 	if operation.Direction == roamer.DirectionDown {
-		if !options.force {
+		if !options.force && !options.stamp {
 			answer := false
 			survey.AskOne(&survey.Confirm{
 				Message: "You're about to run one or more down migrations, which can result in data loss. Continue?",
@@ -88,15 +95,24 @@ func commandGo(environment *roamer.Environment, options commandOptions, args []s
 		}
 	}
 
+	actionText := "Applying"
+	if options.stamp {
+		actionText = "Stamping"
+	}
+
 	operation.PreMigrationCallback = func(m *roamer.Migration, d roamer.Direction) {
-		fmt.Printf("Applying %s migration %s - %s\n", d.String(), m.ID, m.Description)
+		fmt.Printf("%s %s migration %s - %s\n", actionText, d.String(), m.ID, m.Description)
 	}
 
 	err = operation.Run()
 	if err != nil {
 		operationErr, isOperationErr := err.(roamer.OperationError)
 		if isOperationErr {
-			fmt.Printf("There was an error applying migration %s!\n", operationErr.Migration.ID)
+			fmt.Printf(
+				"There was an error %s migration %s!\n",
+				strings.ToLower(actionText),
+				operationErr.Migration.ID,
+			)
 			fmt.Println()
 			fmt.Println(operationErr.Inner)
 			fmt.Println()

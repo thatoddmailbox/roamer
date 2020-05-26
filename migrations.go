@@ -35,7 +35,7 @@ type AppliedMigration struct {
 }
 
 // ApplyMigration applies the migration to the database.
-func (e *Environment) ApplyMigration(migration Migration, direction Direction) error {
+func (e *Environment) ApplyMigration(migration Migration, direction Direction, stamp bool) error {
 	hasHistoryTable, err := e.driver.TableExists(tableNameRoamerHistory)
 	if err != nil {
 		return err
@@ -72,19 +72,21 @@ func (e *Environment) ApplyMigration(migration Migration, direction Direction) e
 		}
 	}
 
-	// now read the migration file
-	fileToRead := migration.downPath
-	if direction == DirectionUp {
-		fileToRead = migration.upPath
-	}
-	migrationData, err := e.readFile(fileToRead)
-	if err != nil {
-		return err
-	}
+	if !stamp {
+		// now read the migration file
+		fileToRead := migration.downPath
+		if direction == DirectionUp {
+			fileToRead = migration.upPath
+		}
+		migrationData, err := e.readFile(fileToRead)
+		if err != nil {
+			return err
+		}
 
-	_, err = e.db.Exec(string(migrationData))
-	if err != nil {
-		return err
+		_, err = e.db.Exec(string(migrationData))
+		if err != nil {
+			return err
+		}
 	}
 
 	if direction == DirectionUp {

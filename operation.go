@@ -13,6 +13,8 @@ type Operation struct {
 	Direction
 	Distance int
 
+	Stamp bool
+
 	PreMigrationCallback func(*Migration, Direction)
 
 	hasRun bool
@@ -38,6 +40,8 @@ func (e *Environment) NewOperation(from *Migration, to *Migration) (*Operation, 
 	o := Operation{
 		From: from,
 		To:   to,
+
+		Stamp: false,
 
 		e: e,
 	}
@@ -131,7 +135,7 @@ func (o *Operation) Run() error {
 			o.PreMigrationCallback(&migrationToApply, o.Direction)
 		}
 
-		err := o.e.ApplyMigration(migrationToApply, o.Direction)
+		err := o.e.ApplyMigration(migrationToApply, o.Direction, o.Stamp)
 		if err != nil {
 			// the migration failed!
 			return OperationError{

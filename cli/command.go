@@ -18,6 +18,7 @@ type command struct {
 
 type commandOptions struct {
 	force bool
+	stamp bool
 }
 
 var commands map[string]command
