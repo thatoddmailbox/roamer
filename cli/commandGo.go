@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/AlecAivazis/survey"
 
@@ -13,14 +12,23 @@ import (
 func commandGo(environment *roamer.Environment, force bool, args []string) {
 	requireSafe(environment)
 
-	allMigrations, err := environment.ListAllMigrations()
+	lastAppliedMigration, err := environment.GetLastAppliedMigration()
 	if err != nil {
 		panic(err)
 	}
 
-	lastMigration, err := environment.GetLastAppliedMigration()
-	if err != nil {
-		panic(err)
+	var lastMigration *roamer.Migration
+	if lastAppliedMigration != nil {
+		lastMigration, err = environment.ResolveIDOrOffset(lastAppliedMigration.ID)
+		if err != nil {
+			if err == roamer.ErrMigrationNotFound {
+				fmt.Printf("Last applied migration %s does not exist.\nDo `roamer status` for help resolving this.\n", lastAppliedMigration.ID)
+				os.Exit(1)
+				return
+			} else {
+				panic(err)
+			}
+		}
 	}
 
 	targetMigration, err := environment.ResolveIDOrOffset(args[0])
@@ -48,44 +56,9 @@ func commandGo(environment *roamer.Environment, force bool, args []string) {
 		return
 	}
 
-	// figure out the index of the current and the target
-	lastAppliedMigrationIndex := -1
-	targetMigrationIndex := 0
-	for i, migration := range allMigrations {
-		if lastMigration != nil && migration.ID == lastMigration.ID {
-			lastAppliedMigrationIndex = i
-		}
-
-		if targetMigration != nil && migration.ID == targetMigration.ID {
-			targetMigrationIndex = i
-		}
-	}
-
-	if targetMigration == nil {
-		targetMigrationIndex = -1
-	}
-
-	// determine the direction
-	direction := -1
-	directionIsUp := false
-	directionString := "down"
-	if targetMigrationIndex > lastAppliedMigrationIndex {
-		direction = 1
-		directionIsUp = true
-		directionString = "up"
-	}
-
-	distance := targetMigrationIndex - lastAppliedMigrationIndex
-	if distance < 0 {
-		distance = -1 * distance
-	}
-
-	distanceString := ""
-	distanceString += strconv.Itoa(distance) + " "
-	distanceString += directionString
-	distanceString += " migration"
-	if distance != 1 {
-		distanceString += "s"
+	operation, err := environment.NewOperation(lastMigration, targetMigration)
+	if err != nil {
+		panic(err)
 	}
 
 	fromString := "[nothing]"
@@ -96,9 +69,9 @@ func commandGo(environment *roamer.Environment, force bool, args []string) {
 	if targetMigration != nil {
 		toString = targetMigration.ID
 	}
-	fmt.Printf("Going %s -> %s (%s)\n\n", fromString, toString, distanceString)
+	fmt.Printf("Going %s -> %s (%s)\n\n", fromString, toString, operation.DistanceString())
 
-	if !directionIsUp {
+	if operation.Direction == roamer.DirectionDown {
 		if !force {
 			answer := false
 			survey.AskOne(&survey.Confirm{
@@ -115,27 +88,25 @@ func commandGo(environment *roamer.Environment, force bool, args []string) {
 		}
 	}
 
-	offset := 0
-	if directionIsUp {
-		offset = 1
+	operation.PreMigrationCallback = func(m *roamer.Migration, d roamer.Direction) {
+		fmt.Printf("Applying %s migration %s - %s\n", d.String(), m.ID, m.Description)
 	}
 
-	for i := lastAppliedMigrationIndex; i != targetMigrationIndex; i += direction {
-		migrationToApply := allMigrations[i+offset]
-		fmt.Printf("Applying %s migration %s - %s\n", directionString, migrationToApply.ID, migrationToApply.Description)
-
-		err = environment.ApplyMigration(migrationToApply, directionIsUp)
-		if err != nil {
-			// the migration failed!
-			fmt.Printf("There was an error applying migration %s!\n", migrationToApply.ID)
+	err = operation.Run()
+	if err != nil {
+		operationErr, isOperationErr := err.(roamer.OperationError)
+		if isOperationErr {
+			fmt.Printf("There was an error applying migration %s!\n", operationErr.Migration.ID)
 			fmt.Println()
-			fmt.Println(err)
+			fmt.Println(operationErr.Inner)
 			fmt.Println()
 			fmt.Println("The database may now be in an inconsistent state. The migration has been marked as dirty.")
 			fmt.Println("You must connect to the database and manually resolve the issue.")
 			fmt.Println("Then, update the " + environment.GetHistoryTableName() + " table and, depending on how you resolved the issue, either delete the migration or set the dirty flag to 0.")
 			os.Exit(1)
 		}
+
+		panic(err)
 	}
 
 	fmt.Printf("\nThe database is now at migration %s.\n", toString)

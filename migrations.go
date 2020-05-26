@@ -35,7 +35,7 @@ type AppliedMigration struct {
 }
 
 // ApplyMigration applies the migration to the database.
-func (e *Environment) ApplyMigration(migration Migration, up bool) error {
+func (e *Environment) ApplyMigration(migration Migration, direction Direction) error {
 	hasHistoryTable, err := e.driver.TableExists(tableNameRoamerHistory)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func (e *Environment) ApplyMigration(migration Migration, up bool) error {
 		}
 	}
 
-	if up {
+	if direction == DirectionUp {
 		_, err = e.db.Exec(
 			"INSERT INTO "+tableNameRoamerHistory+"(id, appliedAt, dirty) VALUES(?, ?, 1)",
 			migration.ID,
@@ -74,7 +74,7 @@ func (e *Environment) ApplyMigration(migration Migration, up bool) error {
 
 	// now read the migration file
 	fileToRead := migration.downPath
-	if up {
+	if direction == DirectionUp {
 		fileToRead = migration.upPath
 	}
 	migrationData, err := e.readFile(fileToRead)
@@ -87,7 +87,7 @@ func (e *Environment) ApplyMigration(migration Migration, up bool) error {
 		return err
 	}
 
-	if up {
+	if direction == DirectionUp {
 		_, err = e.db.Exec(
 			"UPDATE "+tableNameRoamerHistory+" SET dirty = 0 WHERE id = ?",
 			migration.ID,
