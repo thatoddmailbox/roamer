@@ -6,7 +6,7 @@ import (
 	"github.com/thatoddmailbox/roamer"
 )
 
-func commandCreate(environment *roamer.Environment, force bool, args []string) {
+func commandCreate(environment *roamer.Environment, options commandOptions, args []string) {
 	description := args[0]
 	err := environment.CreateMigration(description)
 	if err != nil {

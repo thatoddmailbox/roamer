@@ -8,7 +8,7 @@ import (
 	"github.com/thatoddmailbox/roamer"
 )
 
-func commandSetup(environment *roamer.Environment, force bool, args []string) {
+func commandSetup(environment *roamer.Environment,  options commandOptions, args []string) {
 	// find the default configs
 	localConfig := roamer.DefaultLocalConfig
 

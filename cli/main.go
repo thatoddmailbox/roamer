@@ -91,5 +91,5 @@ func main() {
 		args = []string{command.Name, *flagEnvironment}
 	}
 
-	command.Action(environment, *flagForce, args[1:])
+	command.Action(environment, commandOptions{*flagForce}, args[1:])
 }

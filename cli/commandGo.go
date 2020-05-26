@@ -9,7 +9,7 @@ import (
 	"github.com/thatoddmailbox/roamer"
 )
 
-func commandGo(environment *roamer.Environment, force bool, args []string) {
+func commandGo(environment *roamer.Environment, options commandOptions, args []string) {
 	requireSafe(environment)
 
 	lastAppliedMigration, err := environment.GetLastAppliedMigration()
@@ -72,7 +72,7 @@ func commandGo(environment *roamer.Environment, force bool, args []string) {
 	fmt.Printf("Going %s -> %s (%s)\n\n", fromString, toString, operation.DistanceString())
 
 	if operation.Direction == roamer.DirectionDown {
-		if !force {
+		if !options.force {
 			answer := false
 			survey.AskOne(&survey.Confirm{
 				Message: "You're about to run one or more down migrations, which can result in data loss. Continue?",

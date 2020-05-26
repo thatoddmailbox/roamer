@@ -8,7 +8,7 @@ import (
 	"github.com/thatoddmailbox/roamer"
 )
 
-func commandStatus(environment *roamer.Environment, force bool, args []string) {
+func commandStatus(environment *roamer.Environment,  options commandOptions, args []string) {
 	allMigrations, err := environment.ListAllMigrations()
 	if err != nil {
 		panic(err)
