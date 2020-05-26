@@ -22,7 +22,7 @@ func writeTOMLToFile(filePath string, thing interface{}) error {
 	return encoder.Encode(thing)
 }
 
-func commandInit(environment *roamer.Environment, args []string) {
+func commandInit(environment *roamer.Environment, force bool, args []string) {
 	// find the default configs
 	config := roamer.DefaultConfig
 	localConfig := roamer.DefaultLocalConfig

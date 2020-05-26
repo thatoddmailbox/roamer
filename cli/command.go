@@ -7,7 +7,7 @@ import (
 	"github.com/thatoddmailbox/roamer"
 )
 
-type commandAction func(*roamer.Environment, []string)
+type commandAction func(*roamer.Environment, bool, []string)
 
 type command struct {
 	Name        string

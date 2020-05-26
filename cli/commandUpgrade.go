@@ -7,7 +7,7 @@ import (
 	"github.com/thatoddmailbox/roamer"
 )
 
-func commandUpgrade(environment *roamer.Environment, args []string) {
+func commandUpgrade(environment *roamer.Environment, force bool, args []string) {
 	requireSafe(environment)
 
 	allMigrations, err := environment.ListAllMigrations()
@@ -37,5 +37,5 @@ func commandUpgrade(environment *roamer.Environment, args []string) {
 	}
 
 	// we rewrite this as a go command to the latest migration
-	commandGo(environment, []string{latestMigration.ID})
+	commandGo(environment, force, []string{latestMigration.ID})
 }

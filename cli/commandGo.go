@@ -5,10 +5,12 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/AlecAivazis/survey"
+
 	"github.com/thatoddmailbox/roamer"
 )
 
-func commandGo(environment *roamer.Environment, args []string) {
+func commandGo(environment *roamer.Environment, force bool, args []string) {
 	requireSafe(environment)
 
 	allMigrations, err := environment.ListAllMigrations()
@@ -95,6 +97,23 @@ func commandGo(environment *roamer.Environment, args []string) {
 		toString = targetMigration.ID
 	}
 	fmt.Printf("Going %s -> %s (%s)\n\n", fromString, toString, distanceString)
+
+	if !directionIsUp {
+		if !force {
+			answer := false
+			survey.AskOne(&survey.Confirm{
+				Message: "You're about to run one or more down migrations, which can result in data loss. Continue?",
+			}, &answer)
+
+			fmt.Println()
+
+			if !answer {
+				fmt.Println("Migration cancelled. No changes have been made.")
+				os.Exit(1)
+				return
+			}
+		}
+	}
 
 	offset := 0
 	if directionIsUp {
