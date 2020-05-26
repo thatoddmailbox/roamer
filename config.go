@@ -4,6 +4,9 @@ package roamer
 type EnvironmentConfig struct {
 	// MigrationDirectory defines where the migrations directory is, relative to the location of the config file.
 	MigrationDirectory string
+
+	// MinimumVersion defines the minimum version of roamer required for this environment.
+	MinimumVersion string
 }
 
 // A Config struct defines some configuration parameters for roamer.
@@ -27,6 +30,7 @@ type LocalConfig struct {
 var DefaultConfig = Config{
 	Environment: EnvironmentConfig{
 		MigrationDirectory: "migrations/",
+		MinimumVersion:     GetVersionString(),
 	},
 }
 

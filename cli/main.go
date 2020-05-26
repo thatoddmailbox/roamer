@@ -33,7 +33,7 @@ func main() {
 	registerCommands()
 
 	if *flagVersion {
-		fmt.Println("Version information unknown")
+		fmt.Printf("roamer version %s", roamer.GetVersionString())
 		os.Exit(0)
 		return
 	}
