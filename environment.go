@@ -177,7 +177,7 @@ func NewEnvironment(config Config, localConfig LocalConfig, db *sql.DB, fs http.
 }
 
 // NewEnvironmentFromDisk creates a new environment with the given path.
-func NewEnvironmentFromDisk(basePath string) (*Environment, error) {
+func NewEnvironmentFromDisk(basePath string, localConfigName string) (*Environment, error) {
 	// validate the path
 	envInfo, err := os.Stat(basePath)
 	if err != nil {
@@ -210,7 +210,7 @@ func NewEnvironmentFromDisk(basePath string) (*Environment, error) {
 	}
 
 	// get the local config path and read it
-	configLocalPath := path.Join(basePath, "roamer.local.toml")
+	configLocalPath := path.Join(basePath, "roamer."+localConfigName+".toml")
 	configLocalFile, err := os.Open(configLocalPath)
 	if err != nil {
 		if os.IsNotExist(err) {

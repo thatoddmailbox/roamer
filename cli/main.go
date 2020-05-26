@@ -27,6 +27,7 @@ func main() {
 	flagHelp := flag.Bool("help", false, "Display usage information.")
 	flagVersion := flag.Bool("version", false, "Display the current version.")
 	flagEnvironment := flag.String("env", "./", "The directory to use as an environment.")
+	flagLocalConfig := flag.String("local-config", "local", "The file to use as the local config.")
 	flag.Parse()
 
 	registerCommands()
@@ -79,7 +80,7 @@ func main() {
 
 	// init and setup are special cases, don't load the environment for it
 	if command.Name != "init" && command.Name != "setup" {
-		environment, err = roamer.NewEnvironmentFromDisk(*flagEnvironment)
+		environment, err = roamer.NewEnvironmentFromDisk(*flagEnvironment, *flagLocalConfig)
 		if err != nil {
 			panic(err)
 		}
