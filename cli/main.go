@@ -79,7 +79,7 @@ func main() {
 
 	// init and setup are special cases, don't load the environment for it
 	if command.Name != "init" && command.Name != "setup" {
-		environment, err = roamer.NewEnvironment(*flagEnvironment)
+		environment, err = roamer.NewEnvironmentFromDisk(*flagEnvironment)
 		if err != nil {
 			panic(err)
 		}

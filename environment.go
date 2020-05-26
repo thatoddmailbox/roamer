@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"sort"
@@ -26,7 +27,7 @@ var ErrEnvironmentWasFile = errors.New("roamer: environment path is a file, not 
 // An Environment is the context in which roamer operates. It contains migrations and configuration data.
 // Do not create this struct manually; use the NewEnvironment function instead.
 type Environment struct {
-	Config Config
+	Config
 	LocalConfig
 
 	db     *sql.DB
@@ -35,8 +36,8 @@ type Environment struct {
 	migrations     []Migration
 	migrationsByID map[string]Migration
 
-	basePath           string
-	fullMigrationsPath string
+	fs         http.FileSystem
+	pathOnDisk string
 }
 
 // GetHistoryTableName gets the name of the table roamer is using to track history.
@@ -44,62 +45,30 @@ func (e *Environment) GetHistoryTableName() string {
 	return tableNameRoamerHistory
 }
 
-// NewEnvironment creates a new environment with the given path.
-func NewEnvironment(basePath string) (*Environment, error) {
-	// validate the path
-	envInfo, err := os.Stat(basePath)
+func (e *Environment) readFile(filename string) ([]byte, error) {
+	migrationFile, err := e.fs.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	migrationData, err := ioutil.ReadAll(migrationFile)
+	migrationFile.Close()
 	if err != nil {
 		return nil, err
 	}
 
-	if !envInfo.IsDir() {
-		return nil, ErrEnvironmentWasFile
-	}
+	return migrationData, nil
+}
 
+// NewEnvironment creates a new environment, reading from the given config and http.FileSystem.
+func NewEnvironment(config Config, localConfig LocalConfig, fs http.FileSystem) (*Environment, error) {
 	env := Environment{
-		Config:      DefaultConfig,
-		LocalConfig: DefaultLocalConfig,
+		Config:      config,
+		LocalConfig: localConfig,
 
-		basePath: basePath,
-	}
-
-	// get the config path and read it
-	configPath := path.Join(basePath, "roamer.toml")
-	configFile, err := os.Open(configPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, ErrEnvironmentMissingConfig
-		}
-
-		return nil, err
-	}
-	metadata, err := toml.DecodeReader(configFile, &env.Config)
-	if err != nil {
-		return nil, err
-	}
-	if len(metadata.Undecoded()) != 0 {
-		return nil, UndecodedConfigError{"roamer.toml", metadata.Undecoded()}
+		fs: fs,
 	}
 
-	// get the local config path and read it
-	configLocalPath := path.Join(basePath, "roamer.local.toml")
-	configLocalFile, err := os.Open(configLocalPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, ErrEnvironmentMissingLocalConfig
-		}
-
-		return nil, err
-	}
-	metadata, err = toml.DecodeReader(configLocalFile, &env.LocalConfig)
-	if err != nil {
-		return nil, err
-	}
-	if len(metadata.Undecoded()) != 0 {
-		return nil, UndecodedConfigError{"roamer.local.toml", metadata.Undecoded()}
-	}
-
-	env.fullMigrationsPath = path.Join(basePath, env.Config.Environment.MigrationDirectory)
+	var err error
 
 	if env.LocalConfig.Database.Driver != "mysql" {
 		return nil, fmt.Errorf("roamer: did not recognize driver name '%s'", env.LocalConfig.Database.Driver)
@@ -149,13 +118,21 @@ func NewEnvironment(basePath string) (*Environment, error) {
 	}
 
 	// scan the migrations directory
-	migrationsDir, err := os.Open(env.fullMigrationsPath)
-	err = env.db.Ping()
+	migrationsDir, err := fs.Open("")
 	if err != nil {
 		return nil, err
 	}
 
-	filenames, err := migrationsDir.Readdirnames(0)
+	dirEntries, err := migrationsDir.Readdir(0)
+	if err != nil {
+		return nil, err
+	}
+
+	filenames := []string{}
+	for _, dirEntry := range dirEntries {
+		filenames = append(filenames, dirEntry.Name())
+	}
+
 	sort.Strings(filenames)
 
 	baseNames := []string{}
@@ -186,8 +163,6 @@ func NewEnvironment(basePath string) (*Environment, error) {
 	env.migrations = []Migration{}
 	env.migrationsByID = map[string]Migration{}
 	for i, baseName := range baseNames {
-		fullPath := path.Join(env.fullMigrationsPath, baseName)
-
 		parts := strings.Split(baseName, "_")
 		id := parts[0]
 
@@ -196,11 +171,11 @@ func NewEnvironment(basePath string) (*Environment, error) {
 			return nil, fmt.Errorf("roamer: there are two migrations with ID %s", id)
 		}
 
-		downPath := fullPath + "_down.sql"
-		upPath := fullPath + "_up.sql"
+		downPath := baseName + "_down.sql"
+		upPath := baseName + "_up.sql"
 
 		// read the description from the down migration
-		downFile, err := ioutil.ReadFile(downPath)
+		downFile, err := env.readFile(downPath)
 		if err != nil {
 			return nil, err
 		}
@@ -227,4 +202,67 @@ func NewEnvironment(basePath string) (*Environment, error) {
 	}
 
 	return &env, nil
+}
+
+// NewEnvironmentFromDisk creates a new environment with the given path.
+func NewEnvironmentFromDisk(basePath string) (*Environment, error) {
+	// validate the path
+	envInfo, err := os.Stat(basePath)
+	if err != nil {
+		return nil, err
+	}
+
+	if !envInfo.IsDir() {
+		return nil, ErrEnvironmentWasFile
+	}
+
+	config := DefaultConfig
+	localConfig := DefaultLocalConfig
+
+	// get the config path and read it
+	configPath := path.Join(basePath, "roamer.toml")
+	configFile, err := os.Open(configPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrEnvironmentMissingConfig
+		}
+
+		return nil, err
+	}
+	metadata, err := toml.DecodeReader(configFile, &config)
+	if err != nil {
+		return nil, err
+	}
+	if len(metadata.Undecoded()) != 0 {
+		return nil, UndecodedConfigError{"roamer.toml", metadata.Undecoded()}
+	}
+
+	// get the local config path and read it
+	configLocalPath := path.Join(basePath, "roamer.local.toml")
+	configLocalFile, err := os.Open(configLocalPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrEnvironmentMissingLocalConfig
+		}
+
+		return nil, err
+	}
+	metadata, err = toml.DecodeReader(configLocalFile, &localConfig)
+	if err != nil {
+		return nil, err
+	}
+	if len(metadata.Undecoded()) != 0 {
+		return nil, UndecodedConfigError{"roamer.local.toml", metadata.Undecoded()}
+	}
+
+	fullMigrationsPath := path.Join(basePath, config.Environment.MigrationDirectory)
+
+	env, err := NewEnvironment(config, localConfig, http.Dir(fullMigrationsPath))
+	if err != nil {
+		return nil, err
+	}
+
+	env.pathOnDisk = fullMigrationsPath
+
+	return env, nil
 }

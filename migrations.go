@@ -77,7 +77,7 @@ func (e *Environment) ApplyMigration(migration Migration, up bool) error {
 	if up {
 		fileToRead = migration.upPath
 	}
-	migrationData, err := ioutil.ReadFile(fileToRead)
+	migrationData, err := e.readFile(fileToRead)
 	if err != nil {
 		return err
 	}
@@ -110,11 +110,15 @@ func (e *Environment) ApplyMigration(migration Migration, up bool) error {
 
 // CreateMigration creates a new migration with the given name.
 func (e *Environment) CreateMigration(description string) error {
+	if e.pathOnDisk == "" {
+		return errors.New("roamer: cannot create migration with this http.FileSystem")
+	}
+
 	id := strconv.FormatInt(time.Now().Unix(), 10)
 	normalizedName := strings.Replace(strings.ToLower(description), " ", "_", -1)
 
-	downPath := path.Join(e.fullMigrationsPath, id+"_"+normalizedName+"_down.sql")
-	upPath := path.Join(e.fullMigrationsPath, id+"_"+normalizedName+"_up.sql")
+	downPath := path.Join(e.pathOnDisk, id+"_"+normalizedName+"_down.sql")
+	upPath := path.Join(e.pathOnDisk, id+"_"+normalizedName+"_up.sql")
 
 	contents := "-- Description: " + description + "\n-- "
 
