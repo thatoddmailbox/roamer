@@ -89,8 +89,11 @@ func NewEnvironment(config Config, localConfig LocalConfig, db *sql.DB, fs http.
 
 	var err error
 
-	if env.LocalConfig.Database.Driver != DriverTypeMySQL {
+	if env.LocalConfig.Database.Driver != DriverTypeMySQL && env.LocalConfig.Database.Driver != DriverTypeSQLite3 {
 		return nil, fmt.Errorf("roamer: did not recognize driver type '%s'", env.LocalConfig.Database.Driver)
+	}
+	if env.LocalConfig.Database.Driver == DriverTypeSQLite3 && !sqliteAvailable {
+		return nil, errors.New("roamer: sqlite support not available")
 	}
 
 	// test that the db works
@@ -102,6 +105,10 @@ func NewEnvironment(config Config, localConfig LocalConfig, db *sql.DB, fs http.
 	// set up the driver
 	if env.LocalConfig.Database.Driver == DriverTypeMySQL {
 		env.driver = &driverMySQL{
+			db: env.db,
+		}
+	} else if env.LocalConfig.Database.Driver == DriverTypeSQLite3 {
+		env.driver = &driverSQLite{
 			db: env.db,
 		}
 	}
@@ -245,6 +252,13 @@ func NewEnvironmentFromDisk(basePath string, localConfigName string) (*Environme
 	}
 
 	fullMigrationsPath := path.Join(basePath, config.Environment.MigrationDirectory)
+
+	if localConfig.Database.Driver != DriverTypeMySQL && localConfig.Database.Driver != DriverTypeSQLite3 {
+		return nil, fmt.Errorf("roamer: did not recognize driver type '%s'", localConfig.Database.Driver)
+	}
+	if localConfig.Database.Driver == DriverTypeSQLite3 && !sqliteAvailable {
+		return nil, errors.New("roamer: sqlite support not available")
+	}
 
 	// connect to the db
 	dsn := localConfig.Database.DSN

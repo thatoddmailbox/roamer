@@ -5,7 +5,8 @@ type DriverType string
 
 // The available driver types.
 const (
-	DriverTypeMySQL DriverType = "mysql"
+	DriverTypeMySQL   DriverType = "mysql"
+	DriverTypeSQLite3 DriverType = "sqlite3"
 )
 
 type driver interface {

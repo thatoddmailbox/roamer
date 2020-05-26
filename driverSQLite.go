@@ -1,19 +1,23 @@
+// +build !nocgo
+
 package roamer
 
 import (
 	"database/sql"
 	"errors"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-type driverMySQL struct {
+const sqliteAvailable = true
+
+type driverSQLite struct {
 	db *sql.DB
 }
 
-func (d *driverMySQL) TableExists(name string) (bool, error) {
+func (d *driverSQLite) TableExists(name string) (bool, error) {
 	rows, err := d.db.Query(
-		"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?",
+		"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
 		name,
 	)
 	if err != nil {
