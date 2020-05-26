@@ -1,9 +1,14 @@
 package roamer
 
-// A Config struct defines some configuration parameters for roamer.
-type Config struct {
+// An EnvironmentConfig struct defines configuration parameters related to the environment's setup.
+type EnvironmentConfig struct {
 	// MigrationDirectory defines where the migrations directory is, relative to the location of the config file.
 	MigrationDirectory string
+}
+
+// A Config struct defines some configuration parameters for roamer.
+type Config struct {
+	Environment EnvironmentConfig
 }
 
 // A LocalDatabaseConfig struct defines configuration parameters for the database connection.
@@ -20,7 +25,9 @@ type LocalConfig struct {
 
 // DefaultConfig contains the default configuration options, used when creating a new environment.
 var DefaultConfig = Config{
-	MigrationDirectory: "migrations/",
+	Environment: EnvironmentConfig{
+		MigrationDirectory: "migrations/",
+	},
 }
 
 // DefaultLocalConfig contains the default configuration options, used when creating a new environment.

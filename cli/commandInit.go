@@ -31,7 +31,7 @@ func commandInit(environment *roamer.Environment, args []string) {
 	basePath := args[0]
 	configPath := path.Join(basePath, "roamer.toml")
 	localConfigPath := path.Join(basePath, "roamer.local.toml")
-	migrationsPath := path.Join(basePath, config.MigrationDirectory)
+	migrationsPath := path.Join(basePath, config.Environment.MigrationDirectory)
 
 	// check that nothing is there
 	_, err := os.Stat(configPath)

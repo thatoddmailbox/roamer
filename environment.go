@@ -99,7 +99,7 @@ func NewEnvironment(basePath string) (*Environment, error) {
 		return nil, UndecodedConfigError{"roamer.local.toml", metadata.Undecoded()}
 	}
 
-	env.fullMigrationsPath = path.Join(basePath, env.Config.MigrationDirectory)
+	env.fullMigrationsPath = path.Join(basePath, env.Config.Environment.MigrationDirectory)
 
 	if env.LocalConfig.Database.Driver != "mysql" {
 		return nil, fmt.Errorf("roamer: did not recognize driver name '%s'", env.LocalConfig.Database.Driver)
