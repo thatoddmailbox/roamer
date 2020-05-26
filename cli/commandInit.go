@@ -11,7 +11,7 @@ import (
 )
 
 func writeTOMLToFile(filePath string, thing interface{}) error {
-	file, err := os.OpenFile(filePath, os.O_CREATE, 0777)
+	file, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
