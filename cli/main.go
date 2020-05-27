@@ -27,7 +27,7 @@ func main() {
 	flagHelp := flag.Bool("help", false, "Display usage information.")
 	flagVersion := flag.Bool("version", false, "Display the current version.")
 	flagEnvironment := flag.String("env", "./", "The directory to use as an environment.")
-	flagForce := flag.Bool("force", false, "Skip any prompts for down migrations. Useful for shell scripts that run migrate.")
+	flagForce := flag.Bool("force", false, "Skip any prompts for down migrations. Useful for shell scripts that run migrations.")
 	flagLocalConfig := flag.String("local-config", "local", "The file to use as the local config.")
 	flagStamp := flag.Bool("stamp", false, "Only update the history table with the migrations, without actually running the migration scripts.")
 	flag.Parse()
