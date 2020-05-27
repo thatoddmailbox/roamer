@@ -10,8 +10,8 @@ import (
 	"github.com/thatoddmailbox/roamer"
 )
 
-func writeTOMLToFile(filePath string, thing interface{}) error {
-	file, err := os.Create(filePath)
+func writeTOMLToFile(filePath string, perm os.FileMode, thing interface{}) error {
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm)
 	if err != nil {
 		return err
 	}
@@ -22,7 +22,7 @@ func writeTOMLToFile(filePath string, thing interface{}) error {
 	return encoder.Encode(thing)
 }
 
-func commandInit(environment *roamer.Environment,  options commandOptions, args []string) {
+func commandInit(environment *roamer.Environment, options commandOptions, args []string) {
 	// find the default configs
 	config := roamer.DefaultConfig
 	localConfig := roamer.DefaultLocalConfig
@@ -63,15 +63,15 @@ func commandInit(environment *roamer.Environment,  options commandOptions, args 
 	}
 
 	// now actually create the things
-	err = writeTOMLToFile(configPath, config)
+	err = writeTOMLToFile(configPath, 0666, config)
 	if err != nil {
 		panic(err)
 	}
-	err = writeTOMLToFile(localConfigPath, localConfig)
+	err = writeTOMLToFile(localConfigPath, 0600, localConfig)
 	if err != nil {
 		panic(err)
 	}
-	err = os.Mkdir(migrationsPath, 0777)
+	err = os.Mkdir(migrationsPath, 0666)
 	if err != nil {
 		panic(err)
 	}

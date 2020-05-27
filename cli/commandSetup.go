@@ -8,7 +8,7 @@ import (
 	"github.com/thatoddmailbox/roamer"
 )
 
-func commandSetup(environment *roamer.Environment,  options commandOptions, args []string) {
+func commandSetup(environment *roamer.Environment, options commandOptions, args []string) {
 	// find the default configs
 	localConfig := roamer.DefaultLocalConfig
 
@@ -28,7 +28,7 @@ func commandSetup(environment *roamer.Environment,  options commandOptions, args
 	}
 
 	// now actually create the thing
-	err = writeTOMLToFile(localConfigPath, localConfig)
+	err = writeTOMLToFile(localConfigPath, 0600, localConfig)
 	if err != nil {
 		panic(err)
 	}
