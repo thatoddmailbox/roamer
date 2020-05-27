@@ -3,12 +3,21 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/thatoddmailbox/roamer"
 )
 
-func commandStatus(environment *roamer.Environment,  options commandOptions, args []string) {
+func spacing(str string, wantLen int) string {
+	if len(str) >= wantLen {
+		return str
+	}
+
+	return strings.Repeat(" ", wantLen-len(str)) + str
+}
+
+func commandStatus(environment *roamer.Environment, options commandOptions, args []string) {
 	allMigrations, err := environment.ListAllMigrations()
 	if err != nil {
 		panic(err)
@@ -51,9 +60,12 @@ func commandStatus(environment *roamer.Environment,  options commandOptions, arg
 
 	columnSpacingStr := "    "
 
+	offsetColumnLength := len(strconv.Itoa(len(allMigrations))) + 2
+	offsetColumnPadding := strings.Repeat(" ", offsetColumnLength)
+
 	idColumnPadding := strings.Repeat(" ", maxIDLen-2+1)
 
-	fmt.Println("ID" + idColumnPadding + columnSpacingStr + "Description")
+	fmt.Println(offsetColumnPadding + " ID" + idColumnPadding + columnSpacingStr + "Description")
 
 	haveDirty := false
 	haveMissing := false
@@ -66,12 +78,14 @@ func commandStatus(environment *roamer.Environment,  options commandOptions, arg
 			idDisplay = "!" + appliedMigration.ID
 		}
 
+		offsetDisplay := spacing("@"+strconv.Itoa(i+1)+" ", offsetColumnLength)
+
 		migration, err := environment.GetMigrationByID(appliedMigration.ID)
 		if err == nil {
-			fmt.Println(idDisplay + columnSpacingStr + migration.Description)
+			fmt.Println(offsetDisplay + " " + idDisplay + columnSpacingStr + migration.Description)
 		} else {
 			if err == roamer.ErrMigrationNotFound {
-				fmt.Println(idDisplay + columnSpacingStr + "*** ERROR: missing corresponding migration file!")
+				fmt.Println(offsetDisplay + " " + idDisplay + columnSpacingStr + "*** ERROR: missing corresponding migration file!")
 				haveMissing = true
 			} else {
 				panic(err)
@@ -86,8 +100,9 @@ func commandStatus(environment *roamer.Environment,  options commandOptions, arg
 		unappliedMigrations = allMigrations[i:]
 	}
 
-	for _, unappliedMigration := range unappliedMigrations {
-		fmt.Println("*" + unappliedMigration.ID + columnSpacingStr + unappliedMigration.Description)
+	for j, unappliedMigration := range unappliedMigrations {
+		offsetDisplay := spacing("@"+strconv.Itoa(i+1+j)+" ", offsetColumnLength)
+		fmt.Println(offsetDisplay + " *" + unappliedMigration.ID + columnSpacingStr + unappliedMigration.Description)
 	}
 
 	if len(allMigrations) != len(appliedMigrations) {
