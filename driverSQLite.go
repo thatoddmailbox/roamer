@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 
+	// database driver
 	_ "github.com/mattn/go-sqlite3"
 )
 

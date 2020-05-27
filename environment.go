@@ -24,7 +24,7 @@ var ErrEnvironmentMissingConfig = errors.New("roamer: environment is missing roa
 var ErrEnvironmentMissingLocalConfig = errors.New("roamer: environment is missing local config file")
 
 // ErrEnvironmentWasFile is returned when you provide a file as your environment path.
-var ErrEnvironmentWasFile = errors.New("roamer: environment path is a file, not a folder! make sure you provide the *path* to your roamer.toml, not the actual file.")
+var ErrEnvironmentWasFile = errors.New("roamer: environment path is a file, not a folder! make sure you provide the *path* to your roamer.toml, not the actual file")
 
 // ErrVersionTooOld is returned when the environment requires a newer version of roamer.
 var ErrVersionTooOld = errors.New("roamer: this environment requires a newer version of roamer")
