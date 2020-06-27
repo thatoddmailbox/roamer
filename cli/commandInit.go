@@ -63,15 +63,15 @@ func commandInit(environment *roamer.Environment, options commandOptions, args [
 	}
 
 	// now actually create the things
-	err = writeTOMLToFile(configPath, 0666, config)
+	err = writeTOMLToFile(configPath, 0775, config)
 	if err != nil {
 		panic(err)
 	}
-	err = writeTOMLToFile(localConfigPath, 0600, localConfig)
+	err = writeTOMLToFile(localConfigPath, 0700, localConfig)
 	if err != nil {
 		panic(err)
 	}
-	err = os.Mkdir(migrationsPath, 0666)
+	err = os.Mkdir(migrationsPath, 0775)
 	if err != nil {
 		panic(err)
 	}
