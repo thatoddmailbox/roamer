@@ -18,7 +18,7 @@ func writeTOMLToFile(filePath string, perm os.FileMode, thing interface{}) error
 	defer file.Close()
 
 	encoder := toml.NewEncoder(file)
-	encoder.Indent = "\t"
+	encoder.Indent = ""
 	return encoder.Encode(thing)
 }
 
