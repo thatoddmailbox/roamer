@@ -77,5 +77,5 @@ func commandInit(environment *roamer.Environment, options commandOptions, args [
 	}
 
 	fmt.Println("A roamer.toml, roamer.local.toml, and migrations directory have been created for you.")
-	fmt.Println("If you're using version control software, make sure to exclude roamer.local.toml from it!")
+	fmt.Println("If you're using version control software, make sure to exclude roamer.local.toml!")
 }
