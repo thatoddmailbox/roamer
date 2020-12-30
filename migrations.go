@@ -15,6 +15,7 @@ import (
 var ErrMigrationNotFound = errors.New("roamer: could not find the requested migration")
 
 var reMigrationDescription = regexp.MustCompile("-- Description: (.*)\r*\n")
+var reMultipleUnderscores = regexp.MustCompile("_+")
 
 // A Migration represents a distinct operation performed on a database.
 type Migration struct {
@@ -117,7 +118,12 @@ func (e *Environment) CreateMigration(description string) error {
 	}
 
 	id := strconv.FormatInt(time.Now().Unix(), 10)
-	normalizedName := strings.Replace(strings.ToLower(description), " ", "_", -1)
+	charactersToRemove := []string{" ", "/", "|", "\\", "*", ",", ":", ";", "-", ".", "!", "?", "%", "=", "<", ">", "\""}
+	normalizedName := strings.ToLower(description)
+	for _, character := range charactersToRemove {
+		normalizedName = strings.Replace(normalizedName, character, "_", -1)
+	}
+	normalizedName = reMultipleUnderscores.ReplaceAllString(normalizedName, "_")
 
 	downPath := path.Join(e.pathOnDisk, id+"_"+normalizedName+"_down.sql")
 	upPath := path.Join(e.pathOnDisk, id+"_"+normalizedName+"_up.sql")
