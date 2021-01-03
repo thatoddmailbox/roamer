@@ -81,9 +81,12 @@ func commandGo(environment *roamer.Environment, options commandOptions, args []s
 	if operation.Direction == roamer.DirectionDown {
 		if !options.force && !options.stamp {
 			answer := false
-			survey.AskOne(&survey.Confirm{
+			err = survey.AskOne(&survey.Confirm{
 				Message: "You're about to run one or more down migrations, which can result in data loss. Continue?",
 			}, &answer)
+			if err != nil {
+				panic(err)
+			}
 
 			fmt.Println()
 
