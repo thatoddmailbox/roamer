@@ -5,7 +5,7 @@
 
 It's available as a command-line tool that can be used with any programming language; however, if you're using Go, you can also embed roamer directly into your program.
 
-Note: While the command-line interface is mostly stable, the Go API should not be considered stable quite yet!
+> Note: While the command-line interface is mostly stable, the Go API should not be considered stable quite yet! It's possible that a future release of roamer might change the Go API; however, if that does happen, the breaking change would be released in a new minor version.
 
 ## Documentation
 First, follow the [installation instructions](https://github.com/thatoddmailbox/roamer/wiki/Installation).
