@@ -125,11 +125,12 @@ func main() {
 
 			archiveWriter := tar.NewWriter(gzipWriter)
 
-			archiveWriter.WriteHeader(&tar.Header{
+			err = archiveWriter.WriteHeader(&tar.Header{
 				Name: executableName,
 				Mode: 0777,
 				Size: int64(executableStat.Size()),
 			})
+			check(err)
 
 			_, err = io.Copy(archiveWriter, executableFile)
 			check(err)
