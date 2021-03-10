@@ -67,13 +67,13 @@ func main() {
 	log.Printf("Building roamer version %s", version)
 
 	targets := []target{
-		target{"windows", "386", ".exe", archiveTypeZip},
-		target{"windows", "amd64", ".exe", archiveTypeZip},
+		{"windows", "386", ".exe", archiveTypeZip},
+		{"windows", "amd64", ".exe", archiveTypeZip},
 
-		target{"linux", "386", "", archiveTypeTarGz},
-		target{"linux", "amd64", "", archiveTypeTarGz},
+		{"linux", "386", "", archiveTypeTarGz},
+		{"linux", "amd64", "", archiveTypeTarGz},
 
-		target{"darwin", "amd64", "", archiveTypeTarGz},
+		{"darwin", "amd64", "", archiveTypeTarGz},
 	}
 
 	for _, target := range targets {
