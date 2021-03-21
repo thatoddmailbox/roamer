@@ -248,7 +248,7 @@ func NewEnvironmentFromDisk(basePath string, localConfigName string) (*Environme
 		return nil, err
 	}
 	if len(metadata.Undecoded()) != 0 {
-		return nil, UndecodedConfigError{"roamer.local.toml", metadata.Undecoded()}
+		return nil, UndecodedConfigError{"roamer." + localConfigName + ".toml", metadata.Undecoded()}
 	}
 
 	fullMigrationsPath := path.Join(basePath, config.Environment.MigrationDirectory)
