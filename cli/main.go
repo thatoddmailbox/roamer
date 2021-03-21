@@ -87,9 +87,9 @@ func main() {
 			panic(err)
 		}
 	} else {
-		// sneak in the environment path as an argument
+		// sneak in the environment path and local config names as arguments
 		// a bit of a hack but it works
-		args = []string{command.Name, *flagEnvironment}
+		args = []string{command.Name, *flagEnvironment, *flagLocalConfig}
 	}
 
 	command.Action(environment, commandOptions{*flagForce, *flagStamp}, args[1:])
