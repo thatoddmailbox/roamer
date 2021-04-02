@@ -21,7 +21,7 @@ func commandSetup(environment *roamer.Environment, options commandOptions, args 
 	_, err := os.Stat(localConfigPath)
 	if err == nil {
 		fmt.Println("A " + localConfigFile + " file already exists!")
-		fmt.Println("It looks like you already have a roamer environment set up.")
+		fmt.Println("This normally means you already have a roamer environment set up.")
 		os.Exit(1)
 	}
 	if !os.IsNotExist(err) {
