@@ -114,7 +114,7 @@ func (e *Environment) ApplyMigration(migration Migration, direction Direction, s
 // CreateMigration creates a new migration with the given name.
 func (e *Environment) CreateMigration(description string) error {
 	if e.pathOnDisk == "" {
-		return errors.New("roamer: cannot create migration with this http.FileSystem")
+		return errors.New("roamer: cannot create migration when using an http.FileSystem")
 	}
 
 	id := strconv.FormatInt(time.Now().Unix(), 10)
