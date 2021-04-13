@@ -5,6 +5,7 @@ import (
 )
 
 // ResolveIDOrOffset looks up and returns the requested migration.
+// It handles absolute IDs, absolute offsets (such as @2), and relative offsets (such as @+1).
 func (e *Environment) ResolveIDOrOffset(idOrOffset string) (*Migration, error) {
 	if len(idOrOffset) == 0 {
 		return nil, InvalidInputError{idOrOffset}
