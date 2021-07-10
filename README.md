@@ -15,4 +15,4 @@ Then, you're encouraged to follow along with the [guided example](https://github
 * [Migrations](https://github.com/thatoddmailbox/roamer/wiki/Migrations)
 * [Offsets](https://github.com/thatoddmailbox/roamer/wiki/Offsets)
 
-Also, if you want to provide instructions for other users on how to set up roamer with your project, you can link to [Connecting an existing project to your database](https://github.com/thatoddmailbox/roamer/wiki/Connecting-an-existing-project-to-your-database).
+Also, if you want to provide instructions for other users on how to set up roamer with your project, you can link to the [Connecting an existing project to your database](https://github.com/thatoddmailbox/roamer/wiki/Connecting-an-existing-project-to-your-database) wiki page.
