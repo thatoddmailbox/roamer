@@ -2,7 +2,7 @@
 
 `roamer` is a tool that makes handling database migrations easy. It's mainly inspired by [alembic](https://alembic.sqlalchemy.org) and [golang-migrate](https://github.com/golang-migrate/migrate).
 
-It's available as a command-line tool that can be used with any programming language; however, if you're using Go, you can also embed roamer directly into your program.
+It's available as a command-line tool that can be used with any programming language or framework; however, if you're using Go, you can also embed roamer directly into your program.
 
 > Note: While the command-line interface is mostly stable, the Go API should not be considered stable quite yet! It's possible that a future release of roamer might change the Go API; however, if that does happen, the breaking change would be released in a new minor version.
 
