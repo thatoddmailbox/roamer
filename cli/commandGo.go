@@ -11,7 +11,10 @@ import (
 )
 
 func commandGo(environment *roamer.Environment, options commandOptions, args []string) {
-	requireSafe(environment)
+	err := requireSafe(environment)
+	if err != nil {
+		panic(err)
+	}
 
 	lastAppliedMigration, err := environment.GetLastAppliedMigration()
 	if err != nil {

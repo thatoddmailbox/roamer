@@ -71,10 +71,10 @@ func registerCommands() {
 	})
 }
 
-func requireSafe(environment *roamer.Environment) {
+func requireSafe(environment *roamer.Environment) error {
 	isClean, err := environment.VerifyNoDirty()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if !isClean {
@@ -86,7 +86,7 @@ func requireSafe(environment *roamer.Environment) {
 
 	allExist, err := environment.VerifyExist()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if !allExist {
@@ -98,7 +98,7 @@ func requireSafe(environment *roamer.Environment) {
 
 	isInOrder, err := environment.VerifyOrder()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if !isInOrder {
