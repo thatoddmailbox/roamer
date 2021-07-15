@@ -107,4 +107,6 @@ func requireSafe(environment *roamer.Environment) error {
 		fmt.Println("For more information, and help resolving the issue, do `roamer status`.")
 		os.Exit(1)
 	}
+
+	return nil
 }
