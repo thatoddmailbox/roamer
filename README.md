@@ -1,6 +1,6 @@
 # roamer [![CI status](https://github.com/thatoddmailbox/roamer/workflows/CI/badge.svg)](https://github.com/thatoddmailbox/roamer/actions) [![Go Reference](https://pkg.go.dev/badge/github.com/thatoddmailbox/roamer.svg)](https://pkg.go.dev/github.com/thatoddmailbox/roamer)
 
-`roamer` is a tool that makes handling database migrations easy. It's mainly inspired by [alembic](https://alembic.sqlalchemy.org) and [golang-migrate](https://github.com/golang-migrate/migrate).
+`roamer` is a tool that makes handling database migrations easy. It's inspired by [alembic](https://alembic.sqlalchemy.org) and [golang-migrate](https://github.com/golang-migrate/migrate).
 
 It's available as a command-line tool that can be used with any programming language or framework; however, if you're using Go, you can also embed roamer directly into your program.
 
