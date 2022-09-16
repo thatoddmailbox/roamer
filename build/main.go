@@ -74,6 +74,7 @@ func main() {
 		{"linux", "amd64", "", archiveTypeTarGz},
 
 		{"darwin", "amd64", "", archiveTypeTarGz},
+		{"darwin", "arm64", "", archiveTypeTarGz},
 	}
 
 	for _, target := range targets {
