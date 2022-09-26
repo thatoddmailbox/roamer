@@ -85,9 +85,11 @@ func main() {
 		defer os.RemoveAll(buildDir)
 
 		executableName := "roamer" + target.suffix
+		executablePath := filepath.Join(buildDir, executableName)
 
-		buildCmd := exec.Command("go", "build", "-trimpath", "-tags", "nocgo", "-o", executableName, "github.com/thatoddmailbox/roamer/cli")
-		buildCmd.Dir = buildDir
+		buildCmd := exec.Command("go", "build", "-trimpath", "-tags", "nocgo", "-o", executablePath, "github.com/thatoddmailbox/roamer/cli")
+		buildCmd.Dir, err = os.Getwd()
+		check(err)
 		buildCmd.Env = append(os.Environ(),
 			"GOOS="+target.os,
 			"GOARCH="+target.arch,
