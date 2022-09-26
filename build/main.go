@@ -6,7 +6,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -52,14 +51,14 @@ func main() {
 	}
 
 	// clean the output directory
-	outputFiles, err := ioutil.ReadDir(outputDir)
+	outputFiles, err := os.ReadDir(outputDir)
 	check(err)
 	for _, outputFile := range outputFiles {
 		check(os.Remove(filepath.Join(outputDir, outputFile.Name())))
 	}
 
 	// parse version
-	versionFile, err := ioutil.ReadFile("version.go")
+	versionFile, err := os.ReadFile("version.go")
 	check(err)
 
 	version := string(reVersion.FindSubmatch(versionFile)[1])
@@ -80,7 +79,7 @@ func main() {
 	for _, target := range targets {
 		log.Printf("Building for %s/%s...", target.os, target.arch)
 
-		buildDir, err := ioutil.TempDir(os.TempDir(), "roamer_build_")
+		buildDir, err := os.MkdirTemp(os.TempDir(), "roamer_build_")
 		check(err)
 		defer os.RemoveAll(buildDir)
 
