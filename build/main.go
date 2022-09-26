@@ -27,6 +27,7 @@ type target struct {
 	arch        string
 	suffix      string
 	archiveType archiveType
+	cleanup     bool
 }
 
 func check(err error) {
@@ -97,16 +98,17 @@ func main() {
 	log.Printf("Building roamer version %s", version)
 
 	targets := []target{
-		{"windows", "386", ".exe", archiveTypeZip},
-		{"windows", "amd64", ".exe", archiveTypeZip},
+		{"windows", "386", ".exe", archiveTypeZip, false},
+		{"windows", "amd64", ".exe", archiveTypeZip, false},
 
-		{"linux", "386", "", archiveTypeTarGz},
-		{"linux", "amd64", "", archiveTypeTarGz},
+		{"linux", "386", "", archiveTypeTarGz, false},
+		{"linux", "amd64", "", archiveTypeTarGz, false},
 
-		{"darwin", "amd64", "", archiveTypeTarGz},
-		{"darwin", "arm64", "", archiveTypeTarGz},
-		{"darwin", "universal", "", archiveTypeTarGz},
+		{"darwin", "amd64", "", archiveTypeTarGz, true},
+		{"darwin", "arm64", "", archiveTypeTarGz, true},
+		{"darwin", "universal", "", archiveTypeTarGz, false},
 	}
+	cleanups := []string{}
 
 	for _, target := range targets {
 		log.Printf("Building for %s/%s...", target.os, target.arch)
@@ -197,6 +199,19 @@ func main() {
 		}
 
 		check(archiveFile.Close())
+
+		if target.cleanup {
+			cleanups = append(cleanups, archiveName)
+		}
+
+		log.Println("Done!")
+	}
+
+	for _, cleanup := range cleanups {
+		log.Printf("Cleaning up %s...", cleanup)
+
+		archivePath := filepath.Join(outputDir, cleanup)
+		check(os.Remove(archivePath))
 
 		log.Println("Done!")
 	}
