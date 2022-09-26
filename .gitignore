@@ -1,3 +1,4 @@
 build/output
+build/makefat
 cli/cli
 test

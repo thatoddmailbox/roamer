@@ -35,6 +35,26 @@ func check(err error) {
 	}
 }
 
+func extractSingleFileTarGz(tarGzPath string, targetPath string) {
+	f, err := os.Open(tarGzPath)
+	check(err)
+	defer f.Close()
+
+	gr, err := gzip.NewReader(f)
+	check(err)
+	defer gr.Close()
+
+	tarFile, err := tar.NewReader(gr).Next()
+	check(err)
+
+	targetFile, err := os.OpenFile(targetPath, os.O_RDWR|os.O_CREATE, 0777)
+	check(err)
+	defer targetFile.Close()
+
+	_, err = io.CopyN(targetFile, gr, tarFile.Size)
+	check(err)
+}
+
 func main() {
 	// test that go works
 	check(exec.Command("go", "version").Run())
@@ -45,6 +65,17 @@ func main() {
 	if err != nil {
 		if os.IsNotExist(err) {
 			check(os.Mkdir(outputDir, 0777))
+		} else {
+			panic(err)
+		}
+	}
+
+	// check that we have makefat
+	makefatPath := filepath.Join("build", "makefat")
+	_, err = os.Stat(makefatPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Fatalln("Missing makefat binary. Build https://github.com/randall77/makefat and place it in the build/ directory.")
 		} else {
 			panic(err)
 		}
@@ -74,6 +105,7 @@ func main() {
 
 		{"darwin", "amd64", "", archiveTypeTarGz},
 		{"darwin", "arm64", "", archiveTypeTarGz},
+		{"darwin", "universal", "", archiveTypeTarGz},
 	}
 
 	for _, target := range targets {
@@ -86,17 +118,39 @@ func main() {
 		executableName := "roamer" + target.suffix
 		executablePath := filepath.Join(buildDir, executableName)
 
-		buildCmd := exec.Command("go", "build", "-trimpath", "-buildvcs=true", "-tags", "nocgo", "-o", executablePath, "github.com/thatoddmailbox/roamer/cli")
-		buildCmd.Dir, err = os.Getwd()
-		check(err)
-		buildCmd.Env = append(os.Environ(),
-			"GOOS="+target.os,
-			"GOARCH="+target.arch,
-		)
-		output, err := buildCmd.CombinedOutput()
-		if err != nil {
-			fmt.Println(string(output))
-			panic(err)
+		isDarwinUniversal := target.os == "darwin" && target.arch == "universal"
+		if !isDarwinUniversal {
+			buildCmd := exec.Command("go", "build", "-trimpath", "-buildvcs=true", "-tags", "nocgo", "-o", executablePath, "github.com/thatoddmailbox/roamer/cli")
+			buildCmd.Dir, err = os.Getwd()
+			check(err)
+			buildCmd.Env = append(os.Environ(),
+				"GOOS="+target.os,
+				"GOARCH="+target.arch,
+			)
+			output, err := buildCmd.CombinedOutput()
+			if err != nil {
+				fmt.Println(string(output))
+				panic(err)
+			}
+		} else {
+			// we already made darwin/amd64 and darwin/arm64, time to combine them
+
+			amd64Archive := filepath.Join(outputDir, "roamer_"+version+"_darwin_amd64.tar.gz")
+			amd64Binary := filepath.Join(buildDir, "roamer-amd64")
+			extractSingleFileTarGz(amd64Archive, amd64Binary)
+
+			arm64Archive := filepath.Join(outputDir, "roamer_"+version+"_darwin_arm64.tar.gz")
+			arm64Binary := filepath.Join(buildDir, "roamer-arm64")
+			extractSingleFileTarGz(arm64Archive, arm64Binary)
+
+			buildCmd := exec.Command(makefatPath, executablePath, amd64Binary, arm64Binary)
+			buildCmd.Dir, err = os.Getwd()
+			check(err)
+			output, err := buildCmd.CombinedOutput()
+			if err != nil {
+				fmt.Println(string(output))
+				panic(err)
+			}
 		}
 
 		// open the executable
