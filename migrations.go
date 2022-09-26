@@ -3,7 +3,7 @@ package roamer
 import (
 	"database/sql"
 	"errors"
-	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -130,11 +130,11 @@ func (e *Environment) CreateMigration(description string) error {
 
 	contents := "-- Description: " + description + "\n-- "
 
-	err := ioutil.WriteFile(downPath, []byte(contents+"Down migration\n\n"), 0777)
+	err := os.WriteFile(downPath, []byte(contents+"Down migration\n\n"), 0777)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(upPath, []byte(contents+"Up migration\n\n"), 0777)
+	err = os.WriteFile(upPath, []byte(contents+"Up migration\n\n"), 0777)
 	if err != nil {
 		return err
 	}

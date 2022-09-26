@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -55,7 +55,7 @@ func (e *Environment) readFile(filename string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	migrationData, err := ioutil.ReadAll(migrationFile)
+	migrationData, err := io.ReadAll(migrationFile)
 	migrationFile.Close()
 	if err != nil {
 		return nil, err
