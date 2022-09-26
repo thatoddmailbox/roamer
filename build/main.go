@@ -87,7 +87,7 @@ func main() {
 		executableName := "roamer" + target.suffix
 		executablePath := filepath.Join(buildDir, executableName)
 
-		buildCmd := exec.Command("go", "build", "-trimpath", "-tags", "nocgo", "-o", executablePath, "github.com/thatoddmailbox/roamer/cli")
+		buildCmd := exec.Command("go", "build", "-trimpath", "-buildvcs=true", "-tags", "nocgo", "-o", executablePath, "github.com/thatoddmailbox/roamer/cli")
 		buildCmd.Dir, err = os.Getwd()
 		check(err)
 		buildCmd.Env = append(os.Environ(),
