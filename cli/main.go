@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/thatoddmailbox/roamer"
 )
@@ -23,6 +24,16 @@ func printHelp() {
 	os.Exit(0)
 }
 
+func findSetting(bi *debug.BuildInfo, name string) string {
+	for _, setting := range bi.Settings {
+		if setting.Key == name {
+			return setting.Value
+		}
+	}
+
+	return ""
+}
+
 func main() {
 	flagHelp := flag.Bool("help", false, "Display usage information.")
 	flagVersion := flag.Bool("version", false, "Display the current version.")
@@ -35,7 +46,30 @@ func main() {
 	registerCommands()
 
 	if *flagVersion {
-		fmt.Printf("roamer version %s\n", roamer.GetVersionString())
+		vcsString := ""
+		bi, ok := debug.ReadBuildInfo()
+
+		if ok {
+			revisionFullString := findSetting(bi, "vcs.revision")
+			if revisionFullString != "" {
+				revisionString := revisionFullString[:7]
+				if findSetting(bi, "vcs.modified") == "true" {
+					revisionString += "*"
+				}
+				vcsString = " (" + revisionString + ")"
+			} else {
+				vcsString = " (no vcs info)"
+			}
+		} else {
+			vcsString = " (no build info)"
+		}
+
+		fmt.Printf("roamer version %s%s\n", roamer.GetVersionString(), vcsString)
+
+		if ok {
+			fmt.Printf("built with %s for %s/%s\n", bi.GoVersion, findSetting(bi, "GOOS"), findSetting(bi, "GOARCH"))
+		}
+
 		os.Exit(0)
 		return
 	}
