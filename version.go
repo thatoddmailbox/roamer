@@ -2,7 +2,7 @@ package roamer
 
 import "github.com/hashicorp/go-version"
 
-const versionString = "0.1.0"
+const versionString = "0.1.1"
 
 // GetVersionString returns the version string associated with this version of roamer.
 func GetVersionString() string {
