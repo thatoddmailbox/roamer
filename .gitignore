@@ -1,4 +1,5 @@
 build/output
 build/makefat
 cli/cli
+.DS_Store
 test
