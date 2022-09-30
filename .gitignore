@@ -1,5 +1,9 @@
-build/output
+build/bottleout
+build/bottlewd
 build/makefat
+build/output
+build/bottle.tar.gz
+build/roamer.rb
 cli/cli
 .DS_Store
 test
