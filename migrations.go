@@ -130,11 +130,11 @@ func (e *Environment) CreateMigration(description string) error {
 
 	contents := "-- Description: " + description + "\n-- "
 
-	err := os.WriteFile(downPath, []byte(contents+"Down migration\n\n"), 0777)
+	err := os.WriteFile(downPath, []byte(contents+"Down migration\n\n"), 0664)
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(upPath, []byte(contents+"Up migration\n\n"), 0777)
+	err = os.WriteFile(upPath, []byte(contents+"Up migration\n\n"), 0664)
 	if err != nil {
 		return err
 	}
