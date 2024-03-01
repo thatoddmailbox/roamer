@@ -35,6 +35,11 @@ func (e OperationError) Error() string {
 	return fmt.Sprintf("roamer: migration %s: %s", e.Migration.ID, e.Inner.Error())
 }
 
+// Unwrap returns the inner error of the OperationError.
+func (e OperationError) Unwrap() error {
+	return e.Inner
+}
+
 // NewOperation creates a new operation, with the given endpoints, in the environment.
 func (e *Environment) NewOperation(from *Migration, to *Migration) (*Operation, error) {
 	o := Operation{
