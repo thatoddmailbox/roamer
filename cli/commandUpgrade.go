@@ -18,7 +18,7 @@ func commandUpgrade(environment *roamer.Environment, options commandOptions, arg
 		panic(err)
 	}
 
-	lastMigration, err := environment.GetLastAppliedMigration()
+	lastAppliedMigration, err := environment.GetLastAppliedMigration()
 	if err != nil {
 		panic(err)
 	}
@@ -32,8 +32,8 @@ func commandUpgrade(environment *roamer.Environment, options commandOptions, arg
 
 	latestMigration := allMigrations[len(allMigrations)-1]
 
-	if lastMigration != nil {
-		if latestMigration.ID == lastMigration.ID {
+	if lastAppliedMigration != nil {
+		if latestMigration.ID == lastAppliedMigration.ID {
 			fmt.Println("The database is already up-to-date.")
 			return
 		}
